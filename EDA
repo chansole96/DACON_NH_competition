@@ -1,0 +1,249 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from wordcloud import WordCloud
+import os
+%matplotlib inline
+
+import matplotlib
+from matplotlib import font_manager, rc
+
+font_path = 'c:/Windows/Fonts/malgun.ttf'
+font_name = font_manager.FontProperties(fname = font_path).get_name()
+matplotlib.rc('font', family = font_name)
+
+import rhinoMorph
+rn = rhinoMorph.startRhino()
+
+os.chdir('./data/')
+os.listdir()
+
+data = pd.read_csv('news_train.csv')
+data.head()
+
+data.shape
+
+### <가짜 정보 "키워드">
+
+1. 진짜 뉴스(info : 0)인 것과 가짜 뉴스(info : 1)인 것만 따로 나눠서 <strong>가장 많이 등장하는 단어</strong>는 무엇인지, <strong>가장 적게 등장하는 단어</strong>는 무엇인지 빈도 분석
+
+real = data.loc[data['info'] == 0]
+fake = data.loc[data['info'] == 1]
+
+real
+
+### 진짜 뉴스
+
+###### - 우선, title에서 가장 많이 등장하는 단어
+
+real_title = real['title'].drop_duplicates().values
+print(len(real_title))
+real_title
+
+# 형태소 분석된 문장 샘플 보기. eomi=True 옵션 사용 (eomi=True를 추가하지 않으면, 보-, 어리- 형태로 나오므로 해석이 안되기 때문)
+sample_data = rhinoMorph.onlyMorph_list(rn, real_title[0], pos=['NNG', 'NNP', 'VV', 'VA', 'XR', 'IC', 'MM', 'MAG', 'MAJ'], eomi=True)
+print('sample data: ',sample_data)   # 형태소 분석 결과
+print('joined sample data: ', ' '.join(sample_data))    # 문자열을 공백(띄어쓰기)으로 연결한다
+
+morphed_data = ''
+for each in real_title:
+    morphed_data_each = rhinoMorph.onlyMorph_list(rn, each, pos=['NNG', 'NNP', 'VV', 'VA', 'XR', 'IC', 'MM', 'MAG', 'MAJ'], eomi=True)
+    joined_data_each = ' '.join(morphed_data_each)     # 문자열을 하나로 연결
+    if joined_data_each:                               # 내용이 있는 경우만 저장
+        morphed_data += joined_data_each + " "
+
+morphed_data[:100]
+
+from collections import Counter
+
+print('morphed_data의 일부:', morphed_data[:200])
+
+mergedTextList = morphed_data.split(' ')   # 결합된 요소들을 공백 단위로 분리하여 하나의 리스트로 만듦
+print('\nmergedTextList의 일부:', mergedTextList[:20])
+
+wordInfo = Counter(mergedTextList)    # 하나의 리스트로 묶인 분리된 요소들을 카운트 (내림차순)
+print('\nwordInfo:', wordInfo)        # 그냥 wordInfo라고 할 땐 내림차순 안되지만, print(wordInfo)로 하면 내림차순이 됨
+
+# 앞에서 20개까지만 출력
+sorted_keys = sorted(wordInfo, key = wordInfo.get, reverse=True)
+sorted_values = sorted(wordInfo.values(), reverse=True)
+%matplotlib inline
+plt.figure(figsize=(15,8))
+plt.bar(range(20), sorted_values[:20])
+plt.xticks(range(20), sorted_keys[:20])
+plt.show()
+
+cloud = WordCloud(font_path = font_path, width = 800, height = 600, background_color = 'white').generate(morphed_data)
+plt.imshow(cloud, interpolation = 'bilinear')
+plt.axis('off')
+plt.show()
+
+###### - 그 다음, content에서 가장 많이 등장하는 단어
+
+real_content = real['content'].drop_duplicates().values
+print(len(real_content))
+real_content
+
+# 형태소 분석된 문장 샘플 보기. eomi=True 옵션 사용 (eomi=True를 추가하지 않으면, 보-, 어리- 형태로 나오므로 해석이 안되기 때문)
+sample_data = rhinoMorph.onlyMorph_list(rn, real_content[0], pos=['NNG', 'NNP', 'VV', 'VA', 'XR', 'IC', 'MM', 'MAG', 'MAJ'], eomi=True)
+print('sample data: ',sample_data)   # 형태소 분석 결과
+print('joined sample data: ', ' '.join(sample_data))    # 문자열을 공백(띄어쓰기)으로 연결한다
+
+morphed_data = ''
+for each in real_content:
+    morphed_data_each = rhinoMorph.onlyMorph_list(rn, each, pos=['NNG', 'NNP', 'VV', 'VA', 'XR', 'IC', 'MM', 'MAG', 'MAJ'], eomi=True)
+    joined_data_each = ' '.join(morphed_data_each)     # 문자열을 하나로 연결
+    if joined_data_each:                               # 내용이 있는 경우만 저장
+        morphed_data += joined_data_each + " "
+
+morphed_data[:100]
+
+from collections import Counter
+
+print('morphed_data의 일부:', morphed_data[:200])
+
+mergedTextList = morphed_data.split(' ')   # 결합된 요소들을 공백 단위로 분리하여 하나의 리스트로 만듦
+print('\nmergedTextList의 일부:', mergedTextList[:20])
+
+wordInfo = Counter(mergedTextList)    # 하나의 리스트로 묶인 분리된 요소들을 카운트 (내림차순)
+print('\nwordInfo:', wordInfo)        # 그냥 wordInfo라고 할 땐 내림차순 안되지만, print(wordInfo)로 하면 내림차순이 됨
+
+len(wordInfo)
+
+# 25개만 출력
+sorted_keys = sorted(wordInfo, key = wordInfo.get, reverse=True)
+sorted_values = sorted(wordInfo.values(), reverse=True)
+%matplotlib inline
+plt.figure(figsize=(20,14))
+plt.bar(range(25), sorted_values[:25])
+plt.xticks(range(25), sorted_keys[:25])
+plt.show()
+
+cloud = WordCloud(font_path = font_path, width = 800, height = 600, background_color = 'white').generate(morphed_data)
+plt.imshow(cloud, interpolation = 'bilinear')
+plt.axis('off')
+plt.show()
+
+### 가짜 뉴스
+
+###### - 우선, title에서 가장 많이 등장하는 단어
+
+fake
+
+fake_title = fake['title'].drop_duplicates().values
+print(len(fake_title))
+fake_title
+
+# 형태소 분석된 문장 샘플 보기. eomi=True 옵션 사용 (eomi=True를 추가하지 않으면, 보-, 어리- 형태로 나오므로 해석이 안되기 때문)
+sample_data = rhinoMorph.onlyMorph_list(rn, fake_title[0], pos=['NNG', 'NNP', 'VV', 'VA', 'XR', 'IC', 'MM', 'MAG', 'MAJ'], eomi=True)
+print('sample data: ',sample_data)   # 형태소 분석 결과
+print('joined sample data: ', ' '.join(sample_data))    # 문자열을 공백(띄어쓰기)으로 연결한다
+
+morphed_data = ''
+for each in fake_title:
+    morphed_data_each = rhinoMorph.onlyMorph_list(rn, each, pos=['NNG', 'NNP', 'VV', 'VA', 'XR', 'IC', 'MM', 'MAG', 'MAJ'], eomi=True)
+    joined_data_each = ' '.join(morphed_data_each)     # 문자열을 하나로 연결
+    if joined_data_each:                               # 내용이 있는 경우만 저장
+        morphed_data += joined_data_each + " "
+
+morphed_data[:100]
+
+from collections import Counter
+
+print('morphed_data의 일부:', morphed_data[:200])
+
+mergedTextList = morphed_data.split(' ')   # 결합된 요소들을 공백 단위로 분리하여 하나의 리스트로 만듦
+print('\nmergedTextList의 일부:', mergedTextList[:20])
+
+wordInfo = Counter(mergedTextList)    # 하나의 리스트로 묶인 분리된 요소들을 카운트 (내림차순)
+print('\nwordInfo:', wordInfo)        # 그냥 wordInfo라고 할 땐 내림차순 안되지만, print(wordInfo)로 하면 내림차순이 됨
+
+# 앞에서 20개까지만 출력
+sorted_keys = sorted(wordInfo, key = wordInfo.get, reverse=True)
+sorted_values = sorted(wordInfo.values(), reverse=True)
+%matplotlib inline
+plt.figure(figsize=(15,8))
+plt.bar(range(20), sorted_values[:20])
+plt.xticks(range(20), sorted_keys[:20])
+plt.show()
+
+cloud = WordCloud(font_path = font_path, width = 800, height = 600, background_color = 'white').generate(morphed_data)
+plt.imshow(cloud, interpolation = 'bilinear')
+plt.axis('off')
+plt.show()
+
+###### - 그 다음, content에서 가장 많이 등장하는 단어
+
+fake_content = fake['content'].drop_duplicates().values
+print(len(fake_content))
+fake_content
+
+# 형태소 분석된 문장 샘플 보기. eomi=True 옵션 사용 (eomi=True를 추가하지 않으면, 보-, 어리- 형태로 나오므로 해석이 안되기 때문)
+sample_data = rhinoMorph.onlyMorph_list(rn, fake_content[0], pos=['NNG', 'NNP', 'VV', 'VA', 'XR', 'IC', 'MM', 'MAG', 'MAJ'], eomi=True)
+print('sample data: ',sample_data)   # 형태소 분석 결과
+print('joined sample data: ', ' '.join(sample_data))    # 문자열을 공백(띄어쓰기)으로 연결한다
+
+morphed_data = ''
+for each in fake_content:
+    morphed_data_each = rhinoMorph.onlyMorph_list(rn, each, pos=['NNG', 'NNP', 'VV', 'VA', 'XR', 'IC', 'MM', 'MAG', 'MAJ'], eomi=True)
+    joined_data_each = ' '.join(morphed_data_each)     # 문자열을 하나로 연결
+    if joined_data_each:                               # 내용이 있는 경우만 저장
+        morphed_data += joined_data_each + " "
+
+morphed_data[:100]
+
+from collections import Counter
+
+print('morphed_data의 일부:', morphed_data[:200])
+
+mergedTextList = morphed_data.split(' ')   # 결합된 요소들을 공백 단위로 분리하여 하나의 리스트로 만듦
+print('\nmergedTextList의 일부:', mergedTextList[:20])
+
+wordInfo = Counter(mergedTextList)    # 하나의 리스트로 묶인 분리된 요소들을 카운트 (내림차순)
+print('\nwordInfo:', wordInfo)        # 그냥 wordInfo라고 할 땐 내림차순 안되지만, print(wordInfo)로 하면 내림차순이 됨
+
+len(wordInfo)
+
+# 25개만 출력
+sorted_keys = sorted(wordInfo, key = wordInfo.get, reverse=True)
+sorted_values = sorted(wordInfo.values(), reverse=True)
+%matplotlib inline
+plt.figure(figsize=(20,14))
+plt.bar(range(25), sorted_values[:25])
+plt.xticks(range(25), sorted_keys[:25])
+plt.show()
+
+cloud = WordCloud(font_path = font_path, width = 800, height = 600, background_color = 'white').generate(morphed_data)
+plt.imshow(cloud, interpolation = 'bilinear')
+plt.axis('off')
+plt.show()
+
+### <가짜 정보 "위치">
+
+2. 진짜 뉴스와 가짜 정보만 따로 나눠서 <strong>"ord"</strong>의 분포를 살펴보자.
+
+real_ord = real['ord'].values
+fake_ord = fake['ord'].values
+real_ord_data = Counter(real_ord)
+fake_ord_data = Counter(fake_ord)
+real_ord_data.elements
+
+fake_ord_data.elements
+
+real['ord'].describe()
+
+fake['ord'].describe()
+
+plt.figure(figsize=(12, 7))
+sns.distplot(fake['ord'], label="order of fake news")
+sns.distplot(real['ord'], label="order of real news")
+plt.xlim(0, 150)
+plt.legend()
+
+plt.figure(figsize=(12, 7))
+sns.distplot(fake['ord'], label="order of fake news")
+sns.distplot(real['ord'], label="order of real news")
+plt.xlim(0, 20)
+plt.legend()
+
