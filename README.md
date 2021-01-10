@@ -1,4 +1,4 @@
-# DACON_NLP_clssification
+# DACON_NH_Competition
 #TFbert
 https://github.com/NLP-kr/tensorflow-ml-nlp-tf2/blob/master/7.PRETRAIN_METHOD/7.2.1.bert_finetune_NSMC.ipynb
 from torch import cuda
